@@ -1,0 +1,8 @@
+https://your-username-olist-dashboard.streamlit.app
+
+# Ganti URL di atas dengan URL dashboard Streamlit Cloud Anda setelah deploy.
+# Cara deploy:
+# 1. Push proyek ke GitHub
+# 2. Login ke https://share.streamlit.io
+# 3. Klik "New app" → pilih repo → set main file: dashboard/dashboard.py
+# 4. Klik Deploy!
