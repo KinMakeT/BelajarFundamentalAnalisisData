@@ -98,7 +98,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**📊 Dataset:** Brazilian E-Commerce (Olist)")
     st.markdown("**📅 Periode:** Sep 2016 – Sep 2018")
-    st.markdown("**👤 Dibuat oleh:** [Nama Anda]")
+    st.markdown("**👤 Dibuat oleh:** I Putu Prabha Nugraha ")
 
 # ─── Filter Logic ────────────────────────────────────────────────────────────
 mask = (
@@ -402,7 +402,7 @@ with tab4:
 st.markdown("---")
 st.markdown(
     "<div style='text-align:center; color:#888; font-size:0.85rem;'>"
-    "🛒 Olist E-Commerce Analytics Dashboard | Dibuat dengan ❤️ menggunakan Streamlit"
+    "🛒 Prabha E-Commerce Analytics Dashboard"
     "</div>",
     unsafe_allow_html=True
 )
