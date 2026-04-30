@@ -11,7 +11,7 @@ warnings.filterwarnings('ignore')
 
 # ─── Page Config ────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Olist E-Commerce Dashboard",
+    page_title="Prabha E-Commerce Dashboard",
     page_icon="🛒",
     layout="wide",
     initial_sidebar_state="expanded"
