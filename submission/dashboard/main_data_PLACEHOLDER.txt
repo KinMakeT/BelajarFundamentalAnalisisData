@@ -1,1 +1,0 @@
-# Jalankan notebook.ipynb terlebih dahulu untuk generate file ini
