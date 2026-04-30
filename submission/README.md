@@ -82,12 +82,6 @@ streamlit run dashboard/dashboard.py
 
 Buka browser dan akses: **http://localhost:8501**
 
-## 🌐 Demo Online
-
-Dashboard telah di-deploy di Streamlit Community Cloud:
-
-👉 **[Lihat Demo](https://share.streamlit.io/...)** ← Ganti dengan URL Anda
-
 ## 📊 Fitur Dashboard
 
 | Fitur | Deskripsi |
