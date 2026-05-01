@@ -7,6 +7,7 @@ import seaborn as sns
 import folium
 from streamlit_folium import st_folium
 import warnings
+from pathlib import Path
 warnings.filterwarnings('ignore')
 
 # ─── Page Config ────────────────────────────────────────────────────────────
@@ -41,10 +42,12 @@ st.markdown("""
 # ─── Load Data ───────────────────────────────────────────────────────────────
 @st.cache_data
 def load_data():
+    base_dir = Path(__file__).resolve().parent
+    csv_path = base_dir / 'main_data.csv'
     try:
-        df = pd.read_csv('dashboard/main_data.csv', parse_dates=['order_purchase_timestamp'])
+        df = pd.read_csv(csv_path, parse_dates=['order_purchase_timestamp'])
     except FileNotFoundError:
-        st.error("⚠️ File `dashboard/main_data.csv` tidak ditemukan. Pastikan Anda sudah menjalankan notebook terlebih dahulu dan menyimpan main_df ke CSV.")
+        st.error(f"⚠️ File `main_data.csv` tidak ditemukan di `{csv_path}`. Pastikan Anda sudah menjalankan notebook terlebih dahulu dan menyimpan main_df ke CSV.")
         st.stop()
     return df
 
