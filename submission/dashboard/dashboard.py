@@ -118,6 +118,17 @@ st.title("🛒 Olist E-Commerce Analytics Dashboard")
 st.markdown("**Analisis komprehensif transaksi e-commerce Brasil | Proyek Akhir Analisis Data**")
 st.markdown("---")
 
+# ─── Empty Filter Guard ──────────────────────────────────────────────────────
+if filtered.empty:
+    state_info = f" dan negara bagian **{selected_state}**" if selected_state != 'Semua' else ""
+    st.warning(
+        f"⚠️ **Tidak ada data untuk filter yang dipilih.**\n\n"
+        f"Tidak ditemukan transaksi antara **{start_date}** – **{end_date}**"
+        f"{state_info}. Silakan ubah rentang tanggal atau pilih negara bagian yang berbeda."
+    )
+    st.info("💡 **Tips:** Periode data tersedia mulai **September 2016** hingga **September 2018**.")
+    st.stop()
+
 # ─── KPI Metrics ─────────────────────────────────────────────────────────────
 st.markdown('<div class="section-header">📈 Key Performance Indicators</div>', unsafe_allow_html=True)
 
@@ -154,6 +165,8 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ════════════════════════════════════════════════════════════
 with tab1:
     st.markdown('<div class="section-header">📅 Tren Volume Pesanan & Revenue Bulanan</div>', unsafe_allow_html=True)
+    if filtered.empty:
+        st.warning("⚠️ Tidak ada data untuk filter yang dipilih. Silakan ubah filter di sidebar.")
 
     monthly = filtered.copy()
     monthly['ym'] = monthly['order_purchase_timestamp'].dt.to_period('M').astype(str)
@@ -196,6 +209,8 @@ with tab1:
 # ════════════════════════════════════════════════════════════
 with tab2:
     st.markdown('<div class="section-header">🗺️ Distribusi Geografis Pesanan di Brasil</div>', unsafe_allow_html=True)
+    if filtered.empty:
+        st.warning("⚠️ Tidak ada data untuk filter yang dipilih. Silakan ubah filter di sidebar.")
 
     col_l, col_r = st.columns([2, 1])
 
@@ -257,88 +272,93 @@ with tab3:
     st.markdown('<div class="section-header">👥 Segmentasi Pelanggan — Analisis RFM</div>', unsafe_allow_html=True)
     st.markdown("Analisis RFM mengelompokkan pelanggan berdasarkan **Recency** (seberapa baru), **Frequency** (seberapa sering), dan **Monetary** (seberapa besar pengeluaran).")
 
-    rfm = compute_rfm(filtered)
+    if filtered.empty:
+        st.warning("⚠️ Tidak ada data untuk filter yang dipilih. Silakan ubah filter di sidebar.")
+    else:
+        rfm = compute_rfm(filtered)
 
-    COLORS = {
-        'Champions': '#2ecc71', 'Loyal Customers': '#27ae60',
-        'New Customers': '#3498db', 'Potential Loyalists': '#9b59b6',
-        'At Risk': '#e67e22', 'Cant Lose Them': '#e74c3c',
-        'Lost': '#95a5a6', 'Hibernating': '#bdc3c7'
-    }
+        COLORS = {
+            'Champions': '#2ecc71', 'Loyal Customers': '#27ae60',
+            'New Customers': '#3498db', 'Potential Loyalists': '#9b59b6',
+            'At Risk': '#e67e22', 'Cant Lose Them': '#e74c3c',
+            'Lost': '#95a5a6', 'Hibernating': '#bdc3c7'
+        }
 
-    seg_count = rfm['Segment'].value_counts().reset_index()
-    seg_count.columns = ['Segment', 'Count']
-    seg_rev   = rfm.groupby('Segment')['Monetary'].sum().reset_index()
-    seg_rev.columns = ['Segment', 'Revenue']
+        seg_count = rfm['Segment'].value_counts().reset_index()
+        seg_count.columns = ['Segment', 'Count']
+        seg_rev   = rfm.groupby('Segment')['Monetary'].sum().reset_index()
+        seg_rev.columns = ['Segment', 'Revenue']
 
-    col_r1, col_r2 = st.columns(2)
+        col_r1, col_r2 = st.columns(2)
 
-    with col_r1:
-        fig, ax = plt.subplots(figsize=(7, 5))
-        colors1 = [COLORS.get(s, '#aaa') for s in seg_count['Segment']]
-        bars = ax.barh(seg_count['Segment'], seg_count['Count'], color=colors1, edgecolor='white')
-        for bar, val in zip(bars, seg_count['Count']):
-            ax.text(bar.get_width() + 50, bar.get_y() + bar.get_height()/2,
-                    f'{val:,}', va='center', fontsize=8)
-        ax.set_title('Jumlah Pelanggan per Segmen', fontweight='bold')
-        ax.set_xlabel('Jumlah Pelanggan')
-        ax.set_xlim(0, seg_count['Count'].max() * 1.2)
-        ax.invert_yaxis(); ax.grid(axis='x', alpha=0.3)
+        with col_r1:
+            fig, ax = plt.subplots(figsize=(7, 5))
+            colors1 = [COLORS.get(s, '#aaa') for s in seg_count['Segment']]
+            bars = ax.barh(seg_count['Segment'], seg_count['Count'], color=colors1, edgecolor='white')
+            for bar, val in zip(bars, seg_count['Count']):
+                ax.text(bar.get_width() + 50, bar.get_y() + bar.get_height()/2,
+                        f'{val:,}', va='center', fontsize=8)
+            ax.set_title('Jumlah Pelanggan per Segmen', fontweight='bold')
+            ax.set_xlabel('Jumlah Pelanggan')
+            ax.set_xlim(0, seg_count['Count'].max() * 1.2)
+            ax.invert_yaxis(); ax.grid(axis='x', alpha=0.3)
+            plt.tight_layout(); st.pyplot(fig); plt.close()
+
+        with col_r2:
+            fig, ax = plt.subplots(figsize=(7, 5))
+            seg_rev_s = seg_rev.sort_values('Revenue', ascending=True)
+            colors2 = [COLORS.get(s, '#aaa') for s in seg_rev_s['Segment']]
+            bars = ax.barh(seg_rev_s['Segment'], seg_rev_s['Revenue'], color=colors2, edgecolor='white')
+            for bar, val in zip(bars, seg_rev_s['Revenue']):
+                ax.text(bar.get_width() * 1.01, bar.get_y() + bar.get_height()/2,
+                        f'R${val/1e6:.2f}M', va='center', fontsize=8)
+            ax.set_title('Total Revenue per Segmen', fontweight='bold')
+            ax.set_xlabel('Total Revenue (BRL)')
+            ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'R${x/1e6:.1f}M'))
+            ax.set_xlim(0, seg_rev_s['Revenue'].max() * 1.25)
+            ax.grid(axis='x', alpha=0.3)
+            plt.tight_layout(); st.pyplot(fig); plt.close()
+
+        # Bubble Chart
+        st.markdown("**RFM Bubble Chart — Posisi Segmen**")
+        rfm_agg = rfm.groupby('Segment').agg(
+            avg_r = ('Recency','mean'), avg_f = ('Frequency','mean'),
+            total_m = ('Monetary','sum'), count = ('customer_unique_id','count')
+        ).reset_index()
+        fig, ax = plt.subplots(figsize=(12, 5))
+        scatter_colors = [COLORS.get(s, '#aaa') for s in rfm_agg['Segment']]
+        ax.scatter(rfm_agg['avg_r'], rfm_agg['avg_f'],
+                   s=rfm_agg['total_m']/200, c=scatter_colors, alpha=0.8, edgecolors='white', lw=1.5)
+        for _, row in rfm_agg.iterrows():
+            ax.annotate(f"{row['Segment']}\n({row['count']:,})",
+                        (row['avg_r'], row['avg_f']), xytext=(8,4),
+                        textcoords='offset points', fontsize=8, fontweight='bold')
+        ax.set_xlabel('Rata-rata Recency (hari) — semakin kiri semakin baru')
+        ax.set_ylabel('Rata-rata Frequency (transaksi)')
+        ax.set_title('RFM Bubble Chart (Ukuran = Total Revenue)', fontweight='bold')
+        ax.invert_xaxis(); ax.grid(alpha=0.3)
         plt.tight_layout(); st.pyplot(fig); plt.close()
 
-    with col_r2:
-        fig, ax = plt.subplots(figsize=(7, 5))
-        seg_rev_s = seg_rev.sort_values('Revenue', ascending=True)
-        colors2 = [COLORS.get(s, '#aaa') for s in seg_rev_s['Segment']]
-        bars = ax.barh(seg_rev_s['Segment'], seg_rev_s['Revenue'], color=colors2, edgecolor='white')
-        for bar, val in zip(bars, seg_rev_s['Revenue']):
-            ax.text(bar.get_width() * 1.01, bar.get_y() + bar.get_height()/2,
-                    f'R${val/1e6:.2f}M', va='center', fontsize=8)
-        ax.set_title('Total Revenue per Segmen', fontweight='bold')
-        ax.set_xlabel('Total Revenue (BRL)')
-        ax.xaxis.set_major_formatter(mticker.FuncFormatter(lambda x, _: f'R${x/1e6:.1f}M'))
-        ax.set_xlim(0, seg_rev_s['Revenue'].max() * 1.25)
-        ax.grid(axis='x', alpha=0.3)
-        plt.tight_layout(); st.pyplot(fig); plt.close()
-
-    # Bubble Chart
-    st.markdown("**RFM Bubble Chart — Posisi Segmen**")
-    rfm_agg = rfm.groupby('Segment').agg(
-        avg_r = ('Recency','mean'), avg_f = ('Frequency','mean'),
-        total_m = ('Monetary','sum'), count = ('customer_unique_id','count')
-    ).reset_index()
-    fig, ax = plt.subplots(figsize=(12, 5))
-    scatter_colors = [COLORS.get(s, '#aaa') for s in rfm_agg['Segment']]
-    ax.scatter(rfm_agg['avg_r'], rfm_agg['avg_f'],
-               s=rfm_agg['total_m']/200, c=scatter_colors, alpha=0.8, edgecolors='white', lw=1.5)
-    for _, row in rfm_agg.iterrows():
-        ax.annotate(f"{row['Segment']}\n({row['count']:,})",
-                    (row['avg_r'], row['avg_f']), xytext=(8,4),
-                    textcoords='offset points', fontsize=8, fontweight='bold')
-    ax.set_xlabel('Rata-rata Recency (hari) — semakin kiri semakin baru')
-    ax.set_ylabel('Rata-rata Frequency (transaksi)')
-    ax.set_title('RFM Bubble Chart (Ukuran = Total Revenue)', fontweight='bold')
-    ax.invert_xaxis(); ax.grid(alpha=0.3)
-    plt.tight_layout(); st.pyplot(fig); plt.close()
-
-    # Tabel Ringkasan
-    st.markdown("**📋 Ringkasan Statistik per Segmen**")
-    seg_table = rfm.groupby('Segment').agg(
-        Pelanggan      = ('customer_unique_id', 'count'),
-        Avg_Recency    = ('Recency', 'mean'),
-        Avg_Frequency  = ('Frequency', 'mean'),
-        Total_Revenue  = ('Monetary', 'sum'),
-        Avg_Revenue    = ('Monetary', 'mean')
-    ).round(2).sort_values('Pelanggan', ascending=False)
-    seg_table['Total_Revenue'] = seg_table['Total_Revenue'].apply(lambda x: f'R${x:,.0f}')
-    seg_table['Avg_Revenue']   = seg_table['Avg_Revenue'].apply(lambda x: f'R${x:.2f}')
-    st.dataframe(seg_table, use_container_width=True)
+        # Tabel Ringkasan
+        st.markdown("**📋 Ringkasan Statistik per Segmen**")
+        seg_table = rfm.groupby('Segment').agg(
+            Pelanggan      = ('customer_unique_id', 'count'),
+            Avg_Recency    = ('Recency', 'mean'),
+            Avg_Frequency  = ('Frequency', 'mean'),
+            Total_Revenue  = ('Monetary', 'sum'),
+            Avg_Revenue    = ('Monetary', 'mean')
+        ).round(2).sort_values('Pelanggan', ascending=False)
+        seg_table['Total_Revenue'] = seg_table['Total_Revenue'].apply(lambda x: f'R${x:,.0f}')
+        seg_table['Avg_Revenue']   = seg_table['Avg_Revenue'].apply(lambda x: f'R${x:.2f}')
+        st.dataframe(seg_table, use_container_width=True)
 
 # ════════════════════════════════════════════════════════════
 # TAB 4 — Produk & Kategori
 # ════════════════════════════════════════════════════════════
 with tab4:
     st.markdown('<div class="section-header">📦 Analisis Produk & Spending Tier</div>', unsafe_allow_html=True)
+    if filtered.empty:
+        st.warning("⚠️ Tidak ada data untuk filter yang dipilih. Silakan ubah filter di sidebar.")
 
     col_p1, col_p2 = st.columns(2)
 
